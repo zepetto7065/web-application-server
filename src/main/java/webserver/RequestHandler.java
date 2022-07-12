@@ -34,11 +34,11 @@ public class RequestHandler extends Thread {
             }
             String url = HttpRequestUtils.getUrl(line);
             Map<String, String> headers = new HashMap<>();
-            while(!"".equals(line)){
-                log.debug("header : {}",line);
+            while (!"".equals(line)) {
+                log.debug("header : {}", line);
                 line = br.readLine();
                 String[] headerTokens = line.split(": ");
-                if(headerTokens.length == 2){
+                if (headerTokens.length == 2) {
                     headers.put(headerTokens[0], headerTokens[1]);
                 }
             }
@@ -55,26 +55,31 @@ public class RequestHandler extends Thread {
 
                 DataOutputStream dos = new DataOutputStream(out);
                 response302Header(dos);
-            } else if (url.equals("/user/login")){
+            } else if (url.equals("/user/login")) {
                 String requestBody = IOUtils.readData(br, Integer.parseInt(headers.get("Content-Length")));
                 log.debug("Request Body : {}", requestBody);
                 Map<String, String> params = HttpRequestUtils.parseQueryString(requestBody);
                 log.debug("userId : {}, password : {}", params.get("userId"), params.get("password"));
                 User user = DataBase.findUserById(params.get("userId"));
-                if(user == null){
+                if (user == null) {
                     log.debug("User Not Found!");
                     DataOutputStream dos = new DataOutputStream(out);
                     response302Header(dos);
-                }else if(user.getPassword().equals(params.get("password"))){
+                } else if (user.getPassword().equals(params.get("password"))) {
                     log.debug("login success!!");
                     DataOutputStream dos = new DataOutputStream(out);
-                    response302HeaderWithCookie(dos,"logined=true");
-                }else {
+                    response302HeaderWithCookie(dos, "logined=true");
+                } else {
                     log.debug("Password Mismatch!");
                     DataOutputStream dos = new DataOutputStream(out);
-                    response302HeaderWithCookie(dos,"logined=true");
+                    response302HeaderWithCookie(dos, "logined=true");
                 }
-            }else{
+            }else if(url.endsWith("css")){
+                DataOutputStream dos = new DataOutputStream(out);
+                byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+            } else{
                 DataOutputStream dos = new DataOutputStream(out);
                 byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
                 response200Header(dos, body.length);
@@ -110,6 +115,16 @@ public class RequestHandler extends Thread {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
