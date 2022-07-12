@@ -32,7 +32,7 @@
 * Set-Cookie를 통해 쿠키를 설정하고 설정된 쿠키가 유지됨을 확인할 수 있었다.
 
 ### 요구사항 6 - stylesheet 적용
-* 
+* css 의 content type에 대해 학습할 수 있었다.
 
 ### heroku 서버에 배포 후
 * 
